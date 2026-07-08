@@ -2,23 +2,41 @@ import { type PomodoroSession } from '../db';
 
 interface SessionHistoryProps {
   sessions: PomodoroSession[] | undefined;
+  selectedDate: string;
+  onDateChange: (date: string) => void;
   onDeleteSession: (id: number) => void;
   onEditSession: (session: PomodoroSession) => void;
 }
 
 export default function SessionHistory({
   sessions,
+  selectedDate,
+  onDateChange,
   onDeleteSession,
   onEditSession,
 }: SessionHistoryProps) {
   return (
     <section className="mb-5">
-      <h2 className="h4 text-white mb-3 fw-bold d-flex justify-content-between align-items-center">
-        <span>Today's Sessions</span>
-        <span className="badge bg-secondary fs-6 rounded-pill">
-          {sessions ? sessions.length : 0} completed
-        </span>
-      </h2>
+      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-3">
+        <h2 className="h4 text-white mb-0 fw-bold">
+          <span>Sessions Log</span>
+          <span className="badge bg-secondary fs-6 rounded-pill ms-2">
+            {sessions ? sessions.length : 0} completed
+          </span>
+        </h2>
+        
+        {/* Date Selector Input */}
+        <div className="d-flex align-items-center gap-2" style={{ maxWidth: '220px' }}>
+          <label htmlFor="logDatePicker" className="text-muted small mb-0 text-nowrap">Filter Date:</label>
+          <input
+            id="logDatePicker"
+            type="date"
+            className="form-control form-control-sm bg-dark text-light border-secondary"
+            value={selectedDate}
+            onChange={(e) => onDateChange(e.target.value)}
+          />
+        </div>
+      </div>
 
       {/* Sessions Table */}
       <div className="glass-card overflow-hidden">
@@ -83,7 +101,7 @@ export default function SessionHistory({
         ) : (
           <div className="text-center py-5 text-muted">
             <i className="bi bi-journal-x fs-1 mb-2 d-block"></i>
-            No focus sessions logged for today yet.
+            No focus sessions logged for {selectedDate === new Date().toISOString().split('T')[0] ? 'today' : selectedDate} yet.
           </div>
         )}
       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type PomodoroSession } from './db';
 import Header from './components/Header';
@@ -67,7 +67,7 @@ export default function App() {
   const [postNotes, setPostNotes] = useState('');
   const [editingSession, setEditingSession] = useState<PomodoroSession | null>(null);
 
-  // Helpers
+  // Helper: Format date as YYYY-MM-DD local time
   const getTodayDateString = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -76,6 +76,10 @@ export default function App() {
     return `${year}-${month}-${day}`;
   };
 
+  // Log active selected date (defaults to today's date)
+  const [selectedDate, setSelectedDate] = useState(getTodayDateString());
+
+  // Helpers
   const formatTimeAMPM = (date: Date) => {
     let hours = date.getHours();
     const minutes = date.getMinutes();
@@ -87,31 +91,15 @@ export default function App() {
     return `${hoursStr}:${minutesStr} ${ampm}`;
   };
 
-  // Live Query: Fetch only today's sessions from database
-  const todayDateStr = getTodayDateString();
+  // Live Query: Fetch only sessions from the selected filter date
   const todaySessions = useLiveQuery(() => {
     return db.sessions
       .where('date')
-      .equals(todayDateStr)
+      .equals(selectedDate)
       .reverse()
       .toArray();
-  }, [todayDateStr]);
+  }, [selectedDate]);
 
-  // Clean/Archive past days' entries on mount (Daily Auto-Reset)
-  useEffect(() => {
-    const cleanupOldSessions = async () => {
-      try {
-        const count = await db.sessions.where('date').notEqual(todayDateStr).count();
-        if (count > 0) {
-          await db.sessions.where('date').notEqual(todayDateStr).delete();
-          console.log(`Archived/Cleaned up ${count} historical entries.`);
-        }
-      } catch (err) {
-        console.error('Error auto-resetting database:', err);
-      }
-    };
-    cleanupOldSessions();
-  }, [todayDateStr]);
 
   // Trigger when focus timer finishes
   const handleTimerComplete = () => {
@@ -206,6 +194,8 @@ export default function App() {
       await db.sessions.add(session);
       setTaskGoal('');
       setPostNotes('');
+      // After saving, reset filter date to today so they see their newly added session in list
+      setSelectedDate(getTodayDateString());
       setPhase('shortBreak');
       setTimeLeft(shortBreakMin * 60);
     } catch (err) {
@@ -278,6 +268,8 @@ export default function App() {
       {/* History Log Table */}
       <SessionHistory
         sessions={todaySessions}
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
         onDeleteSession={handleDeleteSession}
         onEditSession={handleEditSession}
       />
