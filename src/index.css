@@ -1,0 +1,105 @@
+:root {
+  --bs-body-bg: #0f1015;
+  --bs-body-color: #f3f4f6;
+  --glass-bg: rgba(33, 37, 41, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+body {
+  background: radial-gradient(circle at 50% 30%, #1e1b4b 0%, #0f1015 70%);
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Glassmorphism Card style */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Pulse animation for the active timer */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(108, 117, 125, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(108, 117, 125, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(108, 117, 125, 0);
+  }
+}
+
+.timer-pulse-active {
+  animation: pulse 2s infinite;
+}
+
+/* Big clock display */
+.clock-display {
+  font-size: 5.5rem;
+  font-weight: 800;
+  letter-spacing: -2px;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(135deg, #ffffff 30%, #9ca3af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Interactive hover scales */
+.btn-animate {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), filter 0.15s ease;
+}
+
+.btn-animate:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+}
+
+.btn-animate:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Settings slide-in panel */
+.settings-panel {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease, margin 0.3s ease;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+  border-width: 0 !important;
+}
+
+.settings-panel.open {
+  max-height: 500px;
+  opacity: 1;
+  padding-top: 1.5rem !important;
+  padding-bottom: 1.5rem !important;
+  margin-bottom: 1.5rem !important;
+  border-width: 1px !important;
+}
+
+/* Clean, modern scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f1015;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
