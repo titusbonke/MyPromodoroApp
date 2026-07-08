@@ -68,7 +68,7 @@ export default function App() {
     const minutes = date.getMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
-    hours = hours ? hours : 12; 
+    hours = hours ? hours : 12;
     const minutesStr = String(minutes).padStart(2, '0');
     const hoursStr = String(hours).padStart(2, '0');
     return `${hoursStr}:${minutesStr} ${ampm}`;
@@ -140,14 +140,14 @@ export default function App() {
 
   // Save Settings from settings modal
   const handleSaveSettings = async (
-    focus: number, 
-    short: number, 
-    long: number, 
-    repeat: number, 
+    focus: number,
+    short: number,
+    long: number,
+    repeat: number,
     sound: 'digital' | 'chime' | 'bell'
   ) => {
     setIsSettingsOpen(false);
-    
+
     // Save config row to IndexedDB
     try {
       await db.settings.put({
@@ -210,7 +210,7 @@ export default function App() {
     const mins = Math.floor(timeLeft / 60);
     const secs = timeLeft % 60;
     const formattedTime = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    
+
     const phaseLabel = phase === 'focus' ? 'Focus' : phase === 'shortBreak' ? 'Short Break' : 'Long Break';
     document.title = isRunning ? `(${formattedTime}) ${phaseLabel} | Pomodoro` : 'Pomodoro Productivity PWA';
 
@@ -223,7 +223,7 @@ export default function App() {
   useEffect(() => {
     if (isRunning) {
       expectedEndTimeRef.current = Date.now() + timeLeft * 1000;
-      
+
       timerIntervalRef.current = window.setInterval(() => {
         if (expectedEndTimeRef.current !== null) {
           const delta = Math.round((expectedEndTimeRef.current - Date.now()) / 1000);
@@ -261,16 +261,16 @@ export default function App() {
     if (phase === 'focus') {
       const now = new Date();
       setSessionDate(getTodayDateString());
-      
+
       const durationSeconds = secondsAtStartRef.current;
       const startTimeObj = new Date(now.getTime() - durationSeconds * 1000);
       setSessionStartFormatted(formatTimeAMPM(startTimeObj));
-      
+
       const minsSpent = Math.floor(durationSeconds / 60);
       const secsSpent = durationSeconds % 60;
       const durationText = minsSpent > 0 ? `${minsSpent}m ${secsSpent}s` : `${secsSpent}s`;
       setSessionDurationStr(durationText);
-      
+
       setShowPostModal(true);
     } else {
       alert(`${phase === 'shortBreak' ? 'Short Break' : 'Long Break'} has ended! Ready to focus?`);
@@ -283,9 +283,9 @@ export default function App() {
   const handleStart = () => {
     if (phase === 'focus' && !taskGoal.trim()) {
       setShowGoalModal(true);
-      return; 
+      return;
     }
-    
+
     // Play & immediately pause to establish user gesture, bypassing browser autoplay restrictions
     if (audioRef.current) {
       const playPromise = audioRef.current.play();
@@ -366,19 +366,19 @@ export default function App() {
   const handleCompleteEarly = () => {
     setIsRunning(false);
     stopAlarm();
-    
+
     const now = new Date();
     setSessionDate(getTodayDateString());
-    
+
     const durationSeconds = secondsAtStartRef.current - timeLeft;
     const startTimeObj = new Date(now.getTime() - durationSeconds * 1000);
     setSessionStartFormatted(formatTimeAMPM(startTimeObj));
-    
+
     const minsSpent = Math.floor(durationSeconds / 60);
     const secsSpent = durationSeconds % 60;
     const durationText = minsSpent > 0 ? `${minsSpent}m ${secsSpent}s` : `${secsSpent}s`;
     setSessionDurationStr(durationText);
-    
+
     setShowPostModal(true);
   };
 
@@ -521,4 +521,5 @@ export default function App() {
       />
     </div>
   );
+  //test
 }
