@@ -45,7 +45,7 @@ export default function SettingsPanel({
   useEffect(() => {
     // Only play preview if modal is open and the sound selection actually changes from the saved prop
     if (isOpen && localAlarmSound && localAlarmSound !== alarmSound) {
-      const audioPath = `/alert_${localAlarmSound}.mp3`;
+      const audioPath = `/alert_${localAlarmSound}.wav`;
       const previewAudio = new Audio(audioPath);
       
       const playPromise = previewAudio.play();

@@ -8,6 +8,7 @@ import SessionHistory from './components/SessionHistory';
 import PostSessionModal from './components/PostSessionModal';
 import EditSessionModal from './components/EditSessionModal';
 import GoalPromptModal from './components/GoalPromptModal';
+import AppModal from './components/AppModal';
 
 // Custom Hooks
 import { useSettings } from './hooks/useSettings';
@@ -55,7 +56,18 @@ export default function App() {
   });
 
   // State variables for sessions
-  const [taskGoal, setTaskGoal] = useState('');
+  // Restore taskGoal from localStorage to survive page reloads
+  const [taskGoal, setTaskGoalState] = useState<string>(
+    () => localStorage.getItem('pomodoro_task_goal') ?? ''
+  );
+  const setTaskGoal = (goal: string) => {
+    setTaskGoalState(goal);
+    if (goal) {
+      localStorage.setItem('pomodoro_task_goal', goal);
+    } else {
+      localStorage.removeItem('pomodoro_task_goal');
+    }
+  };
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [sessionStartFormatted, setSessionStartFormatted] = useState('');
   const [sessionDate, setSessionDate] = useState('');
@@ -66,6 +78,9 @@ export default function App() {
   const [showPostModal, setShowPostModal] = useState(false);
   const [postNotes, setPostNotes] = useState('');
   const [editingSession, setEditingSession] = useState<PomodoroSession | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [showBreakComplete, setShowBreakComplete] = useState(false);
+  const [completedBreakPhase, setCompletedBreakPhase] = useState<'shortBreak' | 'longBreak'>('shortBreak');
 
   // Helper: Format date as YYYY-MM-DD local time
   const getTodayDateString = () => {
@@ -120,10 +135,9 @@ export default function App() {
       
       setShowPostModal(true);
     } else {
-      alert(`${phase === 'shortBreak' ? 'Short Break' : 'Long Break'} has ended! Ready to focus?`);
-      stopAlarm();
-      setPhase('focus');
-      setTimeLeft(focusMin * 60);
+      // Show break complete modal instead of blocked alert()
+      setCompletedBreakPhase(phase as 'shortBreak' | 'longBreak');
+      setShowBreakComplete(true);
     }
   };
 
@@ -203,14 +217,19 @@ export default function App() {
     }
   };
 
-  const handleDeleteSession = async (id: number) => {
-    if (confirm('Are you sure you want to delete this session from your history?')) {
+  const handleDeleteSession = (id: number) => {
+    setPendingDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (pendingDeleteId !== null) {
       try {
-        await db.sessions.delete(id);
+        await db.sessions.delete(pendingDeleteId);
       } catch (err) {
         console.error('Failed to delete session:', err);
       }
     }
+    setPendingDeleteId(null);
   };
 
   const handleEditSession = (session: PomodoroSession) => {
@@ -298,6 +317,38 @@ export default function App() {
         session={editingSession}
         onClose={() => setEditingSession(null)}
         onSave={handleUpdateSession}
+      />
+      {/* Break Complete Notification Modal */}
+      <AppModal
+        isOpen={showBreakComplete}
+        icon={completedBreakPhase === 'longBreak' ? '☕' : '⚡'}
+        title={completedBreakPhase === 'longBreak' ? 'Long Break Over!' : 'Short Break Over!'}
+        message={completedBreakPhase === 'longBreak'
+          ? "You've had a good rest. Ready to dive back in?"
+          : 'Break time is up. Time to get back to work!'}
+        buttons={[{
+          label: 'Start Focusing',
+          icon: 'bi-play-fill',
+          variant: 'primary',
+          onClick: () => {
+            stopAlarm();
+            setShowBreakComplete(false);
+            setPhase('focus');
+            setTimeLeft(focusMin * 60);
+          }
+        }]}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <AppModal
+        isOpen={pendingDeleteId !== null}
+        icon="⚠️"
+        title="Delete Session"
+        message="Are you sure you want to delete this session?"
+        buttons={[
+          { label: 'Cancel', variant: 'secondary', onClick: () => setPendingDeleteId(null) },
+          { label: 'Delete', icon: 'bi-trash-fill', variant: 'danger', onClick: confirmDelete }
+        ]}
       />
     </div>
   );

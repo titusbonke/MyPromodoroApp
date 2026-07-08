@@ -7,7 +7,7 @@ export function useAlarm(alarmSound: 'digital' | 'chime' | 'bell', alarmRepeatCo
 
   // Sync audio source when alarmSound changes
   useEffect(() => {
-    const audioPath = `/alert_${alarmSound}.mp3`;
+    const audioPath = `/alert_${alarmSound}.wav`;
     if (audioRef.current) {
       audioRef.current.src = audioPath;
     } else {
