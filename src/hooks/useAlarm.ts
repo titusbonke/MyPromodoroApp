@@ -5,9 +5,29 @@ export function useAlarm(alarmSound: 'digital' | 'chime' | 'bell', alarmRepeatCo
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const playCountRef = useRef<number>(1);
 
+  // Preload and cache all audio assets to populate the PWA runtime cache
+  useEffect(() => {
+    const preload = () => {
+      ['digital', 'chime', 'bell'].forEach(sound => {
+        fetch(`/alert_${sound}.mp3`).catch(() => {
+          // Silently fail if server is already offline
+        });
+      });
+    };
+
+    preload(); // Run on initial mount
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', preload);
+      return () => {
+        navigator.serviceWorker.removeEventListener('controllerchange', preload);
+      };
+    }
+  }, []);
+
   // Sync audio source when alarmSound changes
   useEffect(() => {
-    const audioPath = `/alert_${alarmSound}.wav`;
+    const audioPath = `/alert_${alarmSound}.mp3`;
     if (audioRef.current) {
       audioRef.current.src = audioPath;
     } else {

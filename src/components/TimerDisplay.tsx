@@ -1,3 +1,5 @@
+import { useState, useRef, useEffect } from 'react';
+
 type TimerPhase = 'focus' | 'shortBreak' | 'longBreak';
 
 interface TimerDisplayProps {
@@ -11,6 +13,7 @@ interface TimerDisplayProps {
   onSkip: () => void;
   onCompleteEarly: () => void;
   onChangePhase: (p: TimerPhase) => void;
+  onEditGoal: (newGoal: string) => void;
 }
 
 export default function TimerDisplay({
@@ -24,11 +27,42 @@ export default function TimerDisplay({
   onSkip,
   onCompleteEarly,
   onChangePhase,
+  onEditGoal,
 }: TimerDisplayProps) {
+  const [isEditingGoal, setIsEditingGoal] = useState(false);
+  const [draftGoal, setDraftGoal] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const formatTimerDigits = () => {
     const mins = Math.floor(timeLeft / 60);
     const secs = timeLeft % 60;
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
+
+  const startEditing = () => {
+    setDraftGoal(taskGoal);
+    setIsEditingGoal(true);
+  };
+
+  // Auto-focus the input when editing starts
+  useEffect(() => {
+    if (isEditingGoal) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [isEditingGoal]);
+
+  const commitEdit = () => {
+    const trimmed = draftGoal.trim();
+    if (trimmed) {
+      onEditGoal(trimmed);
+    }
+    setIsEditingGoal(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') commitEdit();
+    if (e.key === 'Escape') setIsEditingGoal(false);
   };
 
   return (
@@ -57,10 +91,39 @@ export default function TimerDisplay({
         {/* Task Title Overlay */}
         {phase === 'focus' ? (
           <div className="mb-4">
-            {isRunning ? (
-              <span className="badge bg-danger bg-opacity-70 px-3 py-2 fs-6">
-                Focusing on: <strong className="text-white">{taskGoal}</strong>
-              </span>
+            {isRunning || taskGoal ? (
+              isEditingGoal ? (
+                /* Inline edit field */
+                <div className="d-flex justify-content-center align-items-center gap-2 px-3">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    className="form-control form-control-sm bg-dark text-white border-primary text-center"
+                    style={{ maxWidth: '320px' }}
+                    value={draftGoal}
+                    onChange={(e) => setDraftGoal(e.target.value)}
+                    onBlur={commitEdit}
+                    onKeyDown={handleKeyDown}
+                    maxLength={80}
+                    placeholder="Enter your focus goal..."
+                  />
+                </div>
+              ) : (
+                /* Goal badge with pencil edit button */
+                <div className="d-inline-flex align-items-center gap-2">
+                  <span className="badge bg-danger bg-opacity-70 px-3 py-2 fs-6">
+                    Focusing on: <strong className="text-white">{taskGoal}</strong>
+                  </span>
+                  <button
+                    className="btn btn-sm btn-outline-secondary border-0 text-muted p-1 btn-animate"
+                    onClick={startEditing}
+                    title="Edit goal"
+                    style={{ lineHeight: 1 }}
+                  >
+                    <i className="bi bi-pencil-fill" style={{ fontSize: '0.75rem' }}></i>
+                  </button>
+                </div>
+              )
             ) : (
               <span className="text-muted small">Enter goal and press start to focus</span>
             )}

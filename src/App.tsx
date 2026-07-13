@@ -282,6 +282,7 @@ export default function App() {
         onSkip={handleSkip}
         onCompleteEarly={handleCompleteEarly}
         onChangePhase={changePhase}
+        onEditGoal={setTaskGoal}
       />
 
       {/* History Log Table */}

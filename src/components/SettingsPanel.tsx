@@ -43,27 +43,48 @@ export default function SettingsPanel({
 
   // Audio Preview trigger on sound change
   useEffect(() => {
-    // Only play preview if modal is open and the sound selection actually changes from the saved prop
-    if (isOpen && localAlarmSound && localAlarmSound !== alarmSound) {
-      const audioPath = `/alert_${localAlarmSound}.wav`;
-      const previewAudio = new Audio(audioPath);
-      
-      const playPromise = previewAudio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(e => console.log('Autoplay preview blocked:', e));
+    // Only play preview if modal is open and the user actually changed the selection
+    if (!isOpen || !localAlarmSound || localAlarmSound === alarmSound) return;
+
+    const audioPath = `/alert_${localAlarmSound}.mp3`;
+    const previewAudio = new Audio();
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let cancelled = false;
+
+    const stopPreview = () => {
+      if (timer) clearTimeout(timer);
+      // Only pause if audio has started loading to avoid AbortError
+      if (!previewAudio.paused) {
+        previewAudio.pause();
       }
+    };
 
-      // Cut off preview after 2 seconds to not disturb the user
-      const timer = setTimeout(() => {
-        previewAudio.pause();
-      }, 2000);
+    const onCanPlay = () => {
+      if (cancelled) return;
+      previewAudio.play().then(() => {
+        // Cut off preview after 2 seconds
+        timer = setTimeout(stopPreview, 2000);
+      }).catch(() => {
+        // Silently ignore — autoplay blocked or file unavailable
+      });
+    };
 
-      return () => {
-        clearTimeout(timer);
-        previewAudio.pause();
-      };
-    }
+    const onError = () => {
+      // File not cached yet — silently skip preview
+    };
+
+    previewAudio.addEventListener('canplaythrough', onCanPlay);
+    previewAudio.addEventListener('error', onError);
+    previewAudio.src = audioPath; // Set src after adding listeners
+
+    return () => {
+      cancelled = true;
+      previewAudio.removeEventListener('canplaythrough', onCanPlay);
+      previewAudio.removeEventListener('error', onError);
+      stopPreview();
+    };
   }, [localAlarmSound, isOpen]);
+
 
   if (!isOpen) return null;
 
@@ -140,9 +161,9 @@ export default function SettingsPanel({
                   value={localAlarmSound}
                   onChange={(e) => setLocalAlarmSound(e.target.value as 'digital' | 'chime' | 'bell')}
                 >
-                  <option value="chime">Ascending Chime (Default)</option>
-                  <option value="bell">Soft Bell Ring</option>
-                  <option value="digital">Digital Double Beep</option>
+                  <option value="chime"> Chime (Default)</option>
+                  <option value="bell"> bell</option>
+                  <option value="digital"> digital</option>
                 </select>
               </div>
               <div className="col-6">
