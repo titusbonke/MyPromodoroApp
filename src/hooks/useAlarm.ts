@@ -9,7 +9,7 @@ export function useAlarm(alarmSound: 'digital' | 'chime' | 'bell', alarmRepeatCo
   useEffect(() => {
     const preload = () => {
       ['digital', 'chime', 'bell'].forEach(sound => {
-        fetch(`/alert_${sound}.mp3`).catch(() => {
+        fetch(`${import.meta.env.BASE_URL}alert_${sound}.mp3`).catch(() => {
           // Silently fail if server is already offline
         });
       });
@@ -27,7 +27,7 @@ export function useAlarm(alarmSound: 'digital' | 'chime' | 'bell', alarmRepeatCo
 
   // Sync audio source when alarmSound changes
   useEffect(() => {
-    const audioPath = `/alert_${alarmSound}.mp3`;
+    const audioPath = `${import.meta.env.BASE_URL}alert_${alarmSound}.mp3`;
     if (audioRef.current) {
       audioRef.current.src = audioPath;
     } else {

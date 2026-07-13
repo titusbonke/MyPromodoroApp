@@ -9,7 +9,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['alert_digital.wav', 'alert_chime.wav', 'alert_bell.wav', 'favicon.svg'],
+      includeAssets: ['alert_digital.mp3', 'alert_chime.mp3', 'alert_bell.mp3', 'favicon.svg'],
       manifest: {
         name: 'Pomodoro Productivity PWA',
         short_name: 'Pomodoro PWA',
@@ -40,10 +40,13 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // Precache all app assets including fonts and audio
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,wav}'],
+        // Precache all app assets including fonts, excluding audio to let rangeRequests capture it
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
 
-        // Runtime cache: serve fonts from cache-first (handles query-string versioned font URLs)
+        // Ignore all query parameters when matching precached assets (fixes offline icons)
+        ignoreURLParametersMatching: [/.*/],
+
+        // Runtime cache: serve fonts and audio with range requests
         runtimeCaching: [
           {
             urlPattern: /\.(?:woff2?|eot|ttf|otf)(\?.*)?$/i,
@@ -64,6 +67,7 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'audio-cache',
+              rangeRequests: true, // Enables RangeRequestsPlugin for media files
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days

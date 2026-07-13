@@ -46,7 +46,7 @@ export default function SettingsPanel({
     // Only play preview if modal is open and the user actually changed the selection
     if (!isOpen || !localAlarmSound || localAlarmSound === alarmSound) return;
 
-    const audioPath = `/alert_${localAlarmSound}.mp3`;
+    const audioPath = `${import.meta.env.BASE_URL}alert_${localAlarmSound}.mp3`;
     const previewAudio = new Audio();
     let timer: ReturnType<typeof setTimeout> | null = null;
     let cancelled = false;
