@@ -4,12 +4,11 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/MyPromodoroApp/',
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['alert_digital.wav', 'alert_chime.wav', 'alert_bell.wav', 'favicon.svg'],
       manifest: {
         name: 'Pomodoro Productivity PWA',
         short_name: 'Pomodoro PWA',
@@ -17,7 +16,7 @@ export default defineConfig({
         theme_color: '#212529',
         background_color: '#212529',
         display: 'standalone',
-        start_url: '/MyPromodoroApp/',
+        start_url: '/',
         icons: [
           {
             src: 'favicon.svg',
@@ -40,11 +39,8 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // Precache only fonts and layout assets, excluding audio
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
-
-        // Ignore all query parameters (like Vite's ?e34853135...) when matching precached assets
-        ignoreURLParametersMatching: [/.*/],
+        // Precache all app assets including fonts and audio
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,wav}'],
 
         // Runtime cache: serve fonts from cache-first (handles query-string versioned font URLs)
         runtimeCaching: [
@@ -67,7 +63,6 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'audio-cache',
-              rangeRequests: true, // Crucial: enables RangeRequestsPlugin for media playbacks
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
