@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/MyPromodoroApp/',
   plugins: [
     react(),
     VitePWA({
@@ -16,7 +17,7 @@ export default defineConfig({
         theme_color: '#212529',
         background_color: '#212529',
         display: 'standalone',
-        start_url: '/',
+        start_url: '/MyPromodoroApp/',
         icons: [
           {
             src: 'favicon.svg',
