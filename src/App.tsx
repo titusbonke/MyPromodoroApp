@@ -23,6 +23,7 @@ export default function App() {
     longBreakMin,
     alarmRepeatCount,
     alarmSound,
+    alarmVolume,
     saveSettings,
   } = useSettings();
 
@@ -32,7 +33,7 @@ export default function App() {
     unlockAudio,
     playAlarm,
     stopAlarm,
-  } = useAlarm(alarmSound, alarmRepeatCount);
+  } = useAlarm(alarmSound, alarmRepeatCount, alarmVolume);
 
   // 3. Timer management hook
   const {
@@ -261,10 +262,11 @@ export default function App() {
         longBreakMin={longBreakMin}
         alarmRepeatCount={alarmRepeatCount}
         alarmSound={alarmSound}
+        alarmVolume={alarmVolume}
         isRunning={isRunning}
         onClose={() => setIsSettingsOpen(false)}
-        onSave={(focus, short, long, repeat, sound) => {
-          saveSettings(focus, short, long, repeat, sound);
+        onSave={(focus, short, long, repeat, sound, volume) => {
+          saveSettings(focus, short, long, repeat, sound, volume);
           setIsSettingsOpen(false);
           setIsRunning(false);
         }}

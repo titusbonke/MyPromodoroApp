@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-export function useAlarm(alarmSound: 'digital' | 'chime' | 'bell', alarmRepeatCount: number) {
+export function useAlarm(alarmSound: 'digital' | 'chime' | 'bell', alarmRepeatCount: number, alarmVolume: number) {
   const [isAlarmPlaying, setIsAlarmPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const playCountRef = useRef<number>(1);
@@ -34,7 +34,15 @@ export function useAlarm(alarmSound: 'digital' | 'chime' | 'bell', alarmRepeatCo
       audioRef.current = new Audio(audioPath);
     }
     audioRef.current.loop = false; // programmatically controlled
+    audioRef.current.volume = alarmVolume;
   }, [alarmSound]);
+
+  // Sync volume when alarmVolume changes
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = alarmVolume;
+    }
+  }, [alarmVolume]);
 
   // Audio repetition handler
   useEffect(() => {

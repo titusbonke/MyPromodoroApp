@@ -18,6 +18,7 @@ export interface PomodoroSetting {
   longBreakDuration: number;
   alarmRepeatCount: number;
   alarmSound: 'digital' | 'chime' | 'bell';
+  alarmVolume?: number;
 }
 
 export class PomodoroDatabase extends Dexie {

@@ -7,9 +7,17 @@ interface SettingsPanelProps {
   longBreakMin: number;
   alarmRepeatCount: number;
   alarmSound: 'digital' | 'chime' | 'bell';
+  alarmVolume: number;
   isRunning: boolean;
   onClose: () => void;
-  onSave: (focus: number, short: number, long: number, repeat: number, sound: 'digital' | 'chime' | 'bell') => void;
+  onSave: (
+    focus: number,
+    short: number,
+    long: number,
+    repeat: number,
+    sound: 'digital' | 'chime' | 'bell',
+    volume: number
+  ) => void;
 }
 
 export default function SettingsPanel({
@@ -19,6 +27,7 @@ export default function SettingsPanel({
   longBreakMin,
   alarmRepeatCount,
   alarmSound,
+  alarmVolume,
   isRunning,
   onClose,
   onSave,
@@ -29,6 +38,7 @@ export default function SettingsPanel({
   const [localLongBreakMin, setLocalLongBreakMin] = useState(longBreakMin);
   const [localAlarmRepeatCount, setLocalAlarmRepeatCount] = useState(alarmRepeatCount);
   const [localAlarmSound, setLocalAlarmSound] = useState<'digital' | 'chime' | 'bell'>(alarmSound);
+  const [localAlarmVolume, setLocalAlarmVolume] = useState<number>(alarmVolume);
 
   // Sync state when props change
   useEffect(() => {
@@ -38,16 +48,19 @@ export default function SettingsPanel({
       setLocalLongBreakMin(longBreakMin);
       setLocalAlarmRepeatCount(alarmRepeatCount);
       setLocalAlarmSound(alarmSound);
+      setLocalAlarmVolume(alarmVolume);
     }
-  }, [focusMin, shortBreakMin, longBreakMin, alarmRepeatCount, alarmSound, isOpen]);
+  }, [focusMin, shortBreakMin, longBreakMin, alarmRepeatCount, alarmSound, alarmVolume, isOpen]);
 
   // Audio Preview trigger on sound change
   useEffect(() => {
-    // Only play preview if modal is open and the user actually changed the selection
-    if (!isOpen || !localAlarmSound || localAlarmSound === alarmSound) return;
+    // Only play preview if modal is open and the user actually changed the selection or volume
+    if (!isOpen || !localAlarmSound) return;
+    if (localAlarmSound === alarmSound && localAlarmVolume === alarmVolume) return;
 
     const audioPath = `${import.meta.env.BASE_URL}alert_${localAlarmSound}.mp3`;
     const previewAudio = new Audio();
+    previewAudio.volume = localAlarmVolume;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let cancelled = false;
 
@@ -83,7 +96,7 @@ export default function SettingsPanel({
       previewAudio.removeEventListener('error', onError);
       stopPreview();
     };
-  }, [localAlarmSound, isOpen]);
+  }, [localAlarmSound, localAlarmVolume, isOpen]);
 
 
   if (!isOpen) return null;
@@ -95,7 +108,7 @@ export default function SettingsPanel({
         return;
       }
     }
-    onSave(localFocusMin, localShortBreakMin, localLongBreakMin, localAlarmRepeatCount, localAlarmSound);
+    onSave(localFocusMin, localShortBreakMin, localLongBreakMin, localAlarmRepeatCount, localAlarmSound, localAlarmVolume);
   };
 
   return (
@@ -177,6 +190,31 @@ export default function SettingsPanel({
                   min={1}
                   required
                 />
+              </div>
+              <div className="col-12 mt-3">
+                <label htmlFor="inputVolume" className="form-label text-muted small d-flex justify-content-between align-items-center mb-2">
+                  <span>Alarm Volume</span>
+                  <span className="badge bg-secondary font-monospace" style={{ minWidth: '3rem' }}>
+                    {Math.round(localAlarmVolume * 100)}%
+                  </span>
+                </label>
+                <div className="d-flex align-items-center gap-3">
+                  <i 
+                    className={`bi ${localAlarmVolume === 0 ? 'bi-volume-mute-fill text-muted' : localAlarmVolume < 0.4 ? 'bi-volume-down-fill text-info' : 'bi-volume-up-fill text-primary'}`} 
+                    style={{ fontSize: '1.4rem', minWidth: '1.5rem' }}
+                  ></i>
+                  <input
+                    id="inputVolume"
+                    type="range"
+                    className="form-range flex-grow-1"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={localAlarmVolume}
+                    onChange={(e) => setLocalAlarmVolume(parseFloat(e.target.value))}
+                    style={{ cursor: 'pointer' }}
+                  />
+                </div>
               </div>
             </div>
 
