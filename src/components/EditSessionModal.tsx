@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { type PomodoroSession } from '../db';
+import TaskSelector from './TaskSelector';
 
 interface EditSessionModalProps {
   isOpen: boolean;
@@ -17,12 +18,16 @@ export default function EditSessionModal({
   const [taskName, setTaskName] = useState('');
   const [status, setStatus] = useState<PomodoroSession['status']>('Fully Completed');
   const [notes, setNotes] = useState('');
+  const [selectedTaskId, setSelectedTaskId] = useState<number | undefined>(undefined);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     if (session) {
       setTaskName(session.taskName);
       setStatus(session.status);
       setNotes(session.notes || '');
+      setSelectedTaskId(session.taskId);
+      setSelectedProjectId(session.projectId);
     }
   }, [session]);
 
@@ -37,6 +42,8 @@ export default function EditSessionModal({
       taskName: taskName.trim(),
       status,
       notes: notes.trim() || undefined,
+      taskId: selectedTaskId,
+      projectId: selectedProjectId,
     });
   };
 
@@ -59,6 +66,22 @@ export default function EditSessionModal({
                 value={taskName}
                 onChange={(e) => setTaskName(e.target.value)}
                 required
+              />
+            </div>
+
+            {/* Linked Task selector */}
+            <div className="mb-3">
+              <label className="form-label text-muted small">Linked Task (Optional)</label>
+              <TaskSelector
+                selectedTaskId={selectedTaskId}
+                onSelectTask={(taskId, projectId, taskTitle) => {
+                  setSelectedTaskId(taskId);
+                  setSelectedProjectId(projectId);
+                  // Auto-fill Goal Name if empty or matching previous task name
+                  if (taskTitle && (!taskName.trim() || taskName.trim() === '')) {
+                    setTaskName(taskTitle);
+                  }
+                }}
               />
             </div>
 
