@@ -110,7 +110,7 @@ export default function TaskInput({
   const selectedProject = selectedTask ? projects.find(p => p.id === selectedTask.projectId) : undefined;
 
   return (
-    <div className="glass-card p-4 mb-5 position-relative" ref={dropdownRef}>
+    <div className="glass-card p-4 mb-5 position-relative" ref={dropdownRef} style={isOpen ? { zIndex: 1050 } : undefined}>
       <div className="row g-3">
         {/* Left Col: Task Selector */}
         <div className="col-12 col-sm-6">

@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 
 interface HeaderProps {
   isSettingsOpen: boolean;
@@ -6,6 +6,9 @@ interface HeaderProps {
 }
 
 export default function Header({ isSettingsOpen, onToggleSettings }: HeaderProps) {
+  const location = useLocation();
+  const isTimerActive = location.pathname === '/' || location.pathname === '/index.html';
+
   return (
     <header className="d-flex flex-column mb-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -24,11 +27,9 @@ export default function Header({ isSettingsOpen, onToggleSettings }: HeaderProps
       <nav className="nav nav-pills bg-dark p-1 rounded-3 border border-secondary" style={{ width: 'fit-content' }}>
         <NavLink 
           to="/" 
-          className={({ isActive }) => 
-            `nav-link px-4 py-2 btn-animate rounded-2 d-flex align-items-center text-decoration-none ${
-              isActive ? 'bg-secondary bg-opacity-50 active text-white fw-semibold' : 'text-muted'
-            }`
-          }
+          className={`nav-link px-4 py-2 btn-animate rounded-2 d-flex align-items-center text-decoration-none ${
+            isTimerActive ? 'bg-secondary bg-opacity-50 active text-white fw-semibold' : 'text-muted'
+          }`}
         >
           <i className="bi bi-clock-history me-2"></i> Timer
         </NavLink>

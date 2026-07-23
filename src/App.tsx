@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { db, type PomodoroSession } from './db';
 import Header from './components/Header';
 import SettingsPanel from './components/SettingsPanel';
@@ -364,6 +364,7 @@ export default function App() {
         />
 
         <Route path="/tasks" element={<TaskPage />} />
+        <Route path="/index.html" element={<Navigate to="/" replace />} />
       </Routes>
 
       {/* Goal Prompt Modal Popup */}
