@@ -1,11 +1,19 @@
+import { useState, useEffect } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../db';
+
 interface PostSessionModalProps {
   isOpen: boolean;
-  taskGoal: string;
+  taskGoal: string; // This is the Session-specific Goal
   isAlarmPlaying: boolean;
   onStopAlarm: () => void;
   notes: string;
   onChangeNotes: (val: string) => void;
-  onSaveSession: (status: 'Fully Completed' | 'Partially Completed' | 'Did Not Complete') => void;
+  onSaveSession: (
+    status: 'Fully Completed' | 'Partially Completed' | 'Did Not Complete',
+    completeTask: boolean
+  ) => void;
+  selectedTaskId: number | undefined;
 }
 
 export default function PostSessionModal({
@@ -16,7 +24,23 @@ export default function PostSessionModal({
   notes,
   onChangeNotes,
   onSaveSession,
+  selectedTaskId,
 }: PostSessionModalProps) {
+  const [completeTask, setCompleteTask] = useState(false);
+
+  // Query linked task title reactively
+  const linkedTask = useLiveQuery(
+    async () => (selectedTaskId !== undefined ? await db.tasks.get(selectedTaskId) : undefined),
+    [selectedTaskId]
+  );
+
+  // Reset checkbox state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setCompleteTask(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -56,23 +80,40 @@ export default function PostSessionModal({
               ></textarea>
             </div>
 
+            {/* Mark Linked Task Complete Checkbox */}
+            {linkedTask && (
+              <div className="form-check mb-4 bg-dark bg-opacity-20 p-3 rounded-3 border border-secondary d-flex align-items-center animate-fadeIn">
+                <input
+                  type="checkbox"
+                  className="form-check-input bg-dark border-secondary m-0 me-2"
+                  id="completeTaskCheckbox"
+                  checked={completeTask}
+                  onChange={(e) => setCompleteTask(e.target.checked)}
+                  style={{ cursor: 'pointer', transform: 'scale(1.2)' }}
+                />
+                <label className="form-check-label text-light small cursor-pointer" htmlFor="completeTaskCheckbox" style={{ cursor: 'pointer' }}>
+                  Mark linked task <strong>"{linkedTask.title}"</strong> as completed
+                </label>
+              </div>
+            )}
+
             {/* Action Rating Buttons */}
             <div className="d-grid gap-2">
               <button
                 className="btn btn-success py-2 fw-semibold btn-animate text-white"
-                onClick={() => onSaveSession('Fully Completed')}
+                onClick={() => onSaveSession('Fully Completed', completeTask)}
               >
                 Fully Completed
               </button>
               <button
                 className="btn btn-warning py-2 fw-semibold btn-animate text-dark"
-                onClick={() => onSaveSession('Partially Completed')}
+                onClick={() => onSaveSession('Partially Completed', completeTask)}
               >
                 Partially Completed
               </button>
               <button
                 className="btn btn-danger py-2 fw-semibold btn-animate text-white"
-                onClick={() => onSaveSession('Did Not Complete')}
+                onClick={() => onSaveSession('Did Not Complete', completeTask)}
               >
                 Did Not Complete
               </button>

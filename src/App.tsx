@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { Routes, Route } from 'react-router-dom';
 import { db, type PomodoroSession } from './db';
 import Header from './components/Header';
 import SettingsPanel from './components/SettingsPanel';
@@ -9,6 +10,8 @@ import PostSessionModal from './components/PostSessionModal';
 import EditSessionModal from './components/EditSessionModal';
 import GoalPromptModal from './components/GoalPromptModal';
 import AppModal from './components/AppModal';
+import TaskInput from './components/TaskInput';
+import TaskPage from './components/TaskPage';
 
 // Custom Hooks
 import { useSettings } from './hooks/useSettings';
@@ -61,14 +64,46 @@ export default function App() {
   const [taskGoal, setTaskGoalState] = useState<string>(
     () => localStorage.getItem('pomodoro_task_goal') ?? ''
   );
+
+  // Active Task and Project bindings
+  const [activeTaskId, setActiveTaskIdState] = useState<number | undefined>(() => {
+    const saved = localStorage.getItem('pomodoro_active_task_id');
+    return saved ? Number(saved) : undefined;
+  });
+  const [activeProjectId, setActiveProjectIdState] = useState<number | undefined>(() => {
+    const saved = localStorage.getItem('pomodoro_active_project_id');
+    return saved ? Number(saved) : undefined;
+  });
+
+  const setActiveTaskId = (id: number | undefined) => {
+    setActiveTaskIdState(id);
+    if (id !== undefined) {
+      localStorage.setItem('pomodoro_active_task_id', String(id));
+    } else {
+      localStorage.removeItem('pomodoro_active_task_id');
+    }
+  };
+
+  const setActiveProjectId = (id: number | undefined) => {
+    setActiveProjectIdState(id);
+    if (id !== undefined) {
+      localStorage.setItem('pomodoro_active_project_id', String(id));
+    } else {
+      localStorage.removeItem('pomodoro_active_project_id');
+    }
+  };
+
   const setTaskGoal = (goal: string) => {
     setTaskGoalState(goal);
     if (goal) {
       localStorage.setItem('pomodoro_task_goal', goal);
     } else {
       localStorage.removeItem('pomodoro_task_goal');
+      setActiveTaskId(undefined);
+      setActiveProjectId(undefined);
     }
   };
+
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [sessionStartFormatted, setSessionStartFormatted] = useState('');
   const [sessionDate, setSessionDate] = useState('');
@@ -188,7 +223,7 @@ export default function App() {
     setShowPostModal(true);
   };
 
-  const saveSession = async (status: PomodoroSession['status']) => {
+  const saveSession = async (status: PomodoroSession['status'], completeTask?: boolean) => {
     stopAlarm();
     setShowPostModal(false);
 
@@ -202,12 +237,23 @@ export default function App() {
       status: status,
       date: sessionDate,
       duration: sessionDurationStr,
-      notes: postNotes.trim() || undefined
+      notes: postNotes.trim() || undefined,
+      taskId: activeTaskId,
+      projectId: activeProjectId,
     };
 
     try {
+      if (completeTask && activeTaskId !== undefined) {
+        await db.tasks.update(activeTaskId, {
+          isCompleted: true,
+          completedDate: new Date().toISOString(),
+        });
+      }
+
       await db.sessions.add(session);
       setTaskGoal('');
+      setActiveTaskId(undefined);
+      setActiveProjectId(undefined);
       setPostNotes('');
       // After saving, reset filter date to today so they see their newly added session in list
       setSelectedDate(getTodayDateString());
@@ -272,29 +318,53 @@ export default function App() {
         }}
       />
 
-      {/* Timer Display Component */}
-      <TimerDisplay
-        timeLeft={timeLeft}
-        isRunning={isRunning}
-        phase={phase}
-        taskGoal={taskGoal}
-        onStart={handleStart}
-        onPause={pauseTimer}
-        onReset={handleReset}
-        onSkip={handleSkip}
-        onCompleteEarly={handleCompleteEarly}
-        onChangePhase={changePhase}
-        onEditGoal={setTaskGoal}
-      />
+      {/* Navigation Router Viewports */}
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <>
+              {/* Task Selector Dropdown Component */}
+              <TaskInput
+                taskGoal={taskGoal}
+                setTaskGoal={setTaskGoal}
+                isRunning={isRunning}
+                phase={phase}
+                selectedTaskId={activeTaskId}
+                setSelectedTaskId={setActiveTaskId}
+                selectedProjectId={activeProjectId}
+                setSelectedProjectId={setActiveProjectId}
+              />
 
-      {/* History Log Table */}
-      <SessionHistory
-        sessions={todaySessions}
-        selectedDate={selectedDate}
-        onDateChange={setSelectedDate}
-        onDeleteSession={handleDeleteSession}
-        onEditSession={handleEditSession}
-      />
+              {/* Timer Display Component */}
+              <TimerDisplay
+                timeLeft={timeLeft}
+                isRunning={isRunning}
+                phase={phase}
+                taskGoal={taskGoal}
+                onStart={handleStart}
+                onPause={pauseTimer}
+                onReset={handleReset}
+                onSkip={handleSkip}
+                onCompleteEarly={handleCompleteEarly}
+                onChangePhase={changePhase}
+                onEditGoal={setTaskGoal}
+              />
+
+              {/* History Log Table */}
+              <SessionHistory
+                sessions={todaySessions}
+                selectedDate={selectedDate}
+                onDateChange={setSelectedDate}
+                onDeleteSession={handleDeleteSession}
+                onEditSession={handleEditSession}
+              />
+            </>
+          }
+        />
+
+        <Route path="/tasks" element={<TaskPage />} />
+      </Routes>
 
       {/* Goal Prompt Modal Popup */}
       <GoalPromptModal
@@ -312,6 +382,7 @@ export default function App() {
         notes={postNotes}
         onChangeNotes={setPostNotes}
         onSaveSession={saveSession}
+        selectedTaskId={activeTaskId}
       />
 
       {/* Edit Session Popup Modal */}
@@ -321,6 +392,7 @@ export default function App() {
         onClose={() => setEditingSession(null)}
         onSave={handleUpdateSession}
       />
+
       {/* Break Complete Notification Modal */}
       <AppModal
         isOpen={showBreakComplete}
